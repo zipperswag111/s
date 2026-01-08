@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sora Studio Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        :root {
+            --bg-app: #09090b;
+            --bg-panel: #121214;
+            --border: #27272a;
+            --primary: #6366f1; /* Indigo */
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --text-main: #ededed;
+            --text-muted: #71717a;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        * { box-sizing: border-box; outline: none; }
+        
+        body {
+            margin: 0;
+            background: var(--bg-app);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            gap: 24px;
+            z-index: 10;
+        }
+
+        .logo {
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            letter-spacing: -0.02em;
+        }
+        .logo i { color: var(--primary); font-size: 1.4rem; }
+
+        .settings-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .label-text {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        input[type="password"], select {
+            background: #000;
+            border: 1px solid var(--border);
+            color: white;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            width: 100%;
+            transition: 0.2s;
+        }
+        
+        input:focus, select:focus {
+            border-color: var(--primary);
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: #333; }
+        .dot.active { background: #10b981; box-shadow: 0 0 8px #10b981; }
+
+        /* --- MAIN STAGE --- */
+        .main-stage {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: radial-gradient(circle at 50% 30%, #1a1a2e 0%, #09090b 60%);
+        }
+
+        /* Video Player Area */
+        .preview-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Minimal padding to maximize video size */
+            padding: 10px; 
+            overflow: hidden;
+        }
+
+        .video-wrapper {
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; 
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+        }
+        .empty-state i { font-size: 5rem; margin-bottom: 15px; opacity: 0.2; }
+
+        /* --- BOTTOM CONTROL BAR --- */
+        .control-bar {
+            width: 95%;
+            max-width: 900px;
+            margin: 0 auto 20px auto;
+            background: rgba(18, 18, 20, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 8px;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+
+        textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 14px;
+            resize: none;
+            height: 56px; /* Collapsed height */
+            font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        textarea:focus { height: 100px; } /* Expand on focus */
+
+        button#generate-btn {
+            background: white;
+            color: black;
+            border: none;
+            height: 40px;
+            padding: 0 24px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 8px; /* Align to bottom of textarea */
+            margin-right: 8px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button#generate-btn:hover {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        button#generate-btn:disabled {
+            background: #333;
+            color: #666;
+            cursor: wait;
+            box-shadow: none;
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(0,0,0,0.3);
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+        button.loading .spinner { display: block; }
+        button.loading i { display: none; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Log Toast */
+        .toast {
+            position: absolute;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #222;
+            border: 1px solid #333;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #aaa;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 101;
+        }
+        .toast.visible { opacity: 1; }
+
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="logo">
+            <i class="ph ph-video-camera"></i>
+            Sora Studio
+        </div>
+
+        <div style="flex:1;"></div> <div class="settings-group">
+            <div class="label-text">Model Settings</div>
+            <select id="size">
+                <option value="1920x1080">16:9 Landscape</option>
+                <option value="1080x1920">9:16 Portrait</option>
+                <option value="1024x1024">1:1 Square</option>
+            </select>
+        </div>
+
+        <div class="settings-group">
+            <div class="label-text">API Configuration</div>
+            <input type="password" id="api-key" placeholder="sk-..." oninput="checkKey()" onchange="saveKey()">
+            <div class="status-badge">
+                <div class="dot" id="status-dot"></div>
+                <span id="key-status-text">No Key</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-stage">
+        
+        <div class="preview-container">
+            <div class="video-wrapper" id="video-wrapper">
+                <div class="empty-state" id="empty-state">
+                    <i class="ph ph-film-strip"></i>
+                    <p>Enter a prompt to generate video</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-bar">
+            <textarea id="prompt" placeholder="Describe your imagination... (e.g., A cyberpunk detective walking in rain, cinematic lighting)"></textarea>
+            <button id="generate-btn" onclick="generate()">
+                <i class="ph ph-sparkle"></i>
+                <div class="spinner"></div>
+                Generate
+            </button>
+        </div>
+
+        <div class="toast" id="toast">Ready</div>
+
+    </div>
+
+<script>
+    const keyInput = document.getElementById('api-key');
+    const statusText = document.getElementById('key-status-text');
+    const statusDot = document.getElementById('status-dot');
+    const toast = document.getElementById('toast');
+    
+    // --- Key Management ---
+    window.onload = () => {
+        const stored = localStorage.getItem('sora_key');
+        if(stored) {
+            keyInput.value = stored;
+            checkKey();
+        }
+    };
+
+    function checkKey() {
+        if(keyInput.value.length > 10) {
+            statusText.innerText = "Connected";
+            statusDot.classList.add('active');
+        } else {
+            statusText.innerText = "No Key";
+            statusDot.classList.remove('active');
+        }
+    }
+
+    function saveKey() {
+        const val = keyInput.value.trim();
+        if(val) localStorage.setItem('sora_key', val);
+        checkKey();
+    }
+
+    function showToast(msg) {
+        toast.innerText = msg;
+        toast.classList.add('visible');
+        setTimeout(() => toast.classList.remove('visible'), 3000);
+    }
+
+    // --- Generation Logic ---
+    async function generate() {
+        const key = localStorage.getItem('sora_key');
+        const prompt = document.getElementById('prompt').value;
+        const btn = document.getElementById('generate-btn');
+        const videoWrapper = document.getElementById('video-wrapper');
+        // Get selected size
+        const sizeSelect = document.getElementById('size').value;
+
+
+        if(!key) return showToast("⚠️ Missing API Key in sidebar");
+        if(!prompt) return showToast("⚠️ Please enter a prompt");
+
+        // UI State: Loading
+        btn.disabled = true;
+        btn.classList.add('loading');
+        btn.innerHTML = `<div class="spinner"></div> Generating`;
+        showToast("Sending request to OpenAI...");
+
+        try {
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    apiKey: key, 
+                    prompt: prompt,
+                    model: "sora-2",
+                    size: sizeSelect // Send size to backend
+                })
+            });
+
+            const data = await response.json();
+
+            if(!response.ok) throw new Error(data.error || "Generation failed");
+
+            if(data.url) {
+                // Remove empty state and inject video
+                videoWrapper.innerHTML = `
+                    <video controls autoplay loop src="${data.url}"></video>
+                `;
+                showToast("✅ Video Generated Successfully");
+            } else {
+                showToast("Job submitted (Polling required for final video)");
+            }
+
+        } catch (e) {
+            showToast("❌ Error: " + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.classList.remove('loading');
+            btn.innerHTML = `<i class="ph ph-sparkle"></i> Generate`;
+        }
+    }
+</script>
+</body>
+</html>
